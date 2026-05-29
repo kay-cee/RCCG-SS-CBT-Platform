@@ -1,19 +1,6 @@
 import { redirect } from "next/navigation";
+import { getCandidateInvite, getCandidateQuestions } from "@/lib/candidate-data";
 import { QuizInterface } from "./quiz-interface";
-
-async function getQuizData(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}/questions`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-async function getInviteData(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 export default async function TakePage({
   params,
@@ -22,8 +9,8 @@ export default async function TakePage({
 }) {
   const { token } = await params;
   const [invite, quizData] = await Promise.all([
-    getInviteData(token),
-    getQuizData(token),
+    getCandidateInvite(token),
+    getCandidateQuestions(token),
   ]);
 
   if (!invite) redirect(`/quiz/${token}/invalid?reason=invalid_token`);
@@ -31,12 +18,24 @@ export default async function TakePage({
   if (invite.session.status === "COMPLETED") redirect(`/quiz/${token}/result`);
   if (!quizData) redirect(`/quiz/${token}/start`);
 
+  // Coerce DB types to the shape QuizInterface expects
+  const questions = quizData.questions.map((q) => ({
+    ...q,
+    type: q.type as "MCQ" | "FITG",
+    savedAnswer: q.savedAnswer
+      ? {
+          selectedOptionId: q.savedAnswer.selectedOptionId ?? undefined,
+          textAnswer: q.savedAnswer.textAnswer ?? undefined,
+        }
+      : null,
+  }));
+
   return (
     <QuizInterface
       token={token}
-      questions={quizData.questions}
+      questions={questions}
       sessionId={quizData.sessionId}
-      startTime={quizData.startTime}
+      startTime={quizData.startTime instanceof Date ? quizData.startTime.toISOString() : quizData.startTime}
       durationMinutes={quizData.durationMinutes}
       quizTitle={invite.quiz.title}
     />

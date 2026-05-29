@@ -1,13 +1,7 @@
 import { redirect } from "next/navigation";
+import { getCandidateInvite } from "@/lib/candidate-data";
 import { StartQuizButton } from "./start-button";
 import { formatDuration } from "@/lib/utils";
-
-async function getInviteData(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 export default async function StartPage({
   params,
@@ -15,7 +9,7 @@ export default async function StartPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const invite = await getInviteData(token);
+  const invite = await getCandidateInvite(token);
 
   if (!invite) redirect(`/quiz/${token}/invalid?reason=invalid_token`);
   if (!invite.registered) redirect(`/quiz/${token}/register`);

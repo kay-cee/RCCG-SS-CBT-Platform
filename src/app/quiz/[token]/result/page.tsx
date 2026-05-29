@@ -1,12 +1,6 @@
 import { redirect } from "next/navigation";
+import { getCandidateResult } from "@/lib/candidate-data";
 import { scorePercentage, isPassed } from "@/lib/utils";
-
-async function getResult(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}/result`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 export default async function ResultPage({
   params,
@@ -14,12 +8,12 @@ export default async function ResultPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const result = await getResult(token);
+  const result = await getCandidateResult(token);
 
   if (!result) redirect(`/quiz/${token}/invalid?reason=invalid_token`);
 
-  const percentage = scorePercentage(result.score, result.totalMarks);
-  const passed = isPassed(result.score, result.totalMarks, result.passingScore);
+  const percentage = scorePercentage(result.score!, result.totalMarks!);
+  const passed = isPassed(result.score!, result.totalMarks!, result.passingScore);
 
   return (
     <main className="min-h-screen bg-slate-50 py-8 px-4">
@@ -73,17 +67,7 @@ export default async function ResultPage({
               <h2 className="font-semibold text-slate-900">Answer Review</h2>
             </div>
             <div className="divide-y divide-slate-100">
-              {result.answers.map((a: {
-                questionId: string;
-                questionText: string;
-                questionType: string;
-                marks: number;
-                marksAwarded: number;
-                isCorrect: boolean;
-                selectedOptionText: string | null;
-                textAnswer: string | null;
-                options: { id: string; text: string; isCorrect: boolean }[];
-              }, idx: number) => (
+              {result.answers.map((a, idx) => (
                 <div key={a.questionId} className="p-4">
                   <div className="flex items-start gap-3">
                     <div
@@ -103,7 +87,7 @@ export default async function ResultPage({
                           {a.options.map((opt) => (
                             <div
                               key={opt.id}
-                              className={cn(opt, a)}
+                              className={optionClass(opt, a)}
                             >
                               {opt.text}
                             </div>
@@ -135,9 +119,9 @@ export default async function ResultPage({
   );
 }
 
-function cn(
+function optionClass(
   opt: { id: string; text: string; isCorrect: boolean },
-  a: { selectedOptionText: string | null; isCorrect: boolean }
+  a: { selectedOptionText: string | null; isCorrect: boolean | null }
 ): string {
   const isSelected = opt.text === a.selectedOptionText;
   const base = "text-xs px-3 py-1.5 rounded-md border ";

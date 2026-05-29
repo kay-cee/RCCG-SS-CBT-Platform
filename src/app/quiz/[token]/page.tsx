@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getCandidateInvite } from "@/lib/candidate-data";
 
 // Token landing: validate token then redirect to correct step
 export default async function QuizTokenPage({
@@ -7,30 +8,24 @@ export default async function QuizTokenPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  const invite = await getCandidateInvite(token);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}`, { cache: "no-store" });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    const error = data.error || "unknown";
-    redirect(`/quiz/${token}/invalid?reason=${error}`);
+  if (!invite) {
+    redirect(`/quiz/${token}/invalid?reason=invalid_token`);
   }
 
-  const data = await res.json();
-
   // Already submitted
-  if (data.session?.status === "COMPLETED") {
+  if (invite.session?.status === "COMPLETED") {
     redirect(`/quiz/${token}/result`);
   }
 
   // Session in progress — go directly to quiz
-  if (data.session?.status === "IN_PROGRESS") {
+  if (invite.session?.status === "IN_PROGRESS") {
     redirect(`/quiz/${token}/take`);
   }
 
   // Registered but no session yet
-  if (data.registered) {
+  if (invite.registered) {
     redirect(`/quiz/${token}/start`);
   }
 

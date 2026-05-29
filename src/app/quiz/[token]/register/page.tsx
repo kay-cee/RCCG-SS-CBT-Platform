@@ -1,19 +1,7 @@
 import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { getCandidateInvite } from "@/lib/candidate-data";
 import { RegisterForm } from "./register-form";
-
-async function getInviteData(token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/candidate/${token}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-async function getZones() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/zones`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
-}
 
 export default async function RegisterPage({
   params,
@@ -21,7 +9,10 @@ export default async function RegisterPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const [invite, zones] = await Promise.all([getInviteData(token), getZones()]);
+  const [invite, zones] = await Promise.all([
+    getCandidateInvite(token),
+    db.zone.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   if (!invite) redirect(`/quiz/${token}/invalid?reason=invalid_token`);
   if (invite.session?.status === "COMPLETED") redirect(`/quiz/${token}/result`);

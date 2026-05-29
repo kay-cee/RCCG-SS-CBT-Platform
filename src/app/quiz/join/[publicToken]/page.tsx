@@ -1,30 +1,9 @@
+// Server component — queries Prisma directly (no internal fetch) so it works
+// reliably on Vercel serverless without depending on NEXT_PUBLIC_APP_URL.
+import { db } from "@/lib/db";
 import { JoinForm } from "./join-form";
 
-interface QuizInfo {
-  id: string;
-  title: string;
-  description: string | null;
-  durationMinutes: number;
-  startDate: string | null;
-  endDate: string | null;
-  status: "DRAFT" | "ACTIVE" | "CLOSED";
-}
-
-async function getQuizInfo(publicToken: string): Promise<QuizInfo | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/quiz/join/${publicToken}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-async function getZones() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/zones`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
-}
+export const dynamic = "force-dynamic";
 
 export default async function JoinPage({
   params,
@@ -32,10 +11,25 @@ export default async function JoinPage({
   params: Promise<{ publicToken: string }>;
 }) {
   const { publicToken } = await params;
-  const [quiz, zones] = await Promise.all([getQuizInfo(publicToken), getZones()]);
 
-  // Invalid or draft — show error state
-  if (!quiz) {
+  const [quiz, zones] = await Promise.all([
+    db.quiz.findUnique({
+      where: { publicToken },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        durationMinutes: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+      },
+    }),
+    db.zone.findMany({ orderBy: { name: "asc" } }),
+  ]);
+
+  // Invalid link or DRAFT quiz
+  if (!quiz || quiz.status === "DRAFT") {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
@@ -77,7 +71,6 @@ export default async function JoinPage({
   return (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-lg w-full">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-600 mb-5">
             <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
