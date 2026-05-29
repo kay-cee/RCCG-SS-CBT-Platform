@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  quizzes      Quiz[]
+
+  @@map("admins")
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+model Quiz {
+  id                 String            @id @default(cuid())
+  title              String
+  description        String?
+  instructions       String
+  durationMinutes    Int               @default(40)
+  startDate          DateTime?
+  endDate            DateTime?
+  passingScore       Float?
+  randomiseQuestions Boolean           @default(false)
+  randomiseOptions   Boolean           @default(false)
+  showAnswers        Boolean           @default(true)
+  status             QuizStatus        @default(DRAFT)
+  adminId            String
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  admin              Admin             @relation(fields: [adminId], references: [id])
+  questions          Question[]
+  invites            CandidateInvite[]
+
+  @@map("quizzes")
+}
+
+enum QuizStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+model Question {
+  id         String       @id @default(cuid())
+  quizId     String
+  type       QuestionType
+  text       String
+  marks      Float        @default(1)
+  order      Int
+  createdAt  DateTime     @default(now())
+  quiz       Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options    MCQOption[]
+  answers    Answer[]
+
+  @@map("questions")
+}
+
+enum QuestionType {
+  MCQ
+  FITG
+}
+
+model MCQOption {
+  id         String    @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean   @default(false)
+  order      Int
+  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers    Answer[]
+
+  @@map("mcq_options")
+}
+
+model CandidateInvite {
+  id           String                 @id @default(cuid())
+  quizId       String
+  email        String
+  name         String
+  zone         String
+  token        String                 @unique
+  tokenExpiry  DateTime
+  inviteStatus InviteStatus           @default(PENDING)
+  sentAt       DateTime?
+  createdAt    DateTime               @default(now())
+  quiz         Quiz                   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  registration CandidateRegistration?
+  session      QuizSession?
+
+  @@map("candidate_invites")
+}
+
+enum InviteStatus {
+  PENDING
+  SENT
+  FAILED
+  OPENED
+}
+
+model CandidateRegistration {
+  id           String          @id @default(cuid())
+  inviteId     String          @unique
+  fullName     String
+  email        String
+  phone        String
+  zone         String
+  registeredAt DateTime        @default(now())
+  invite       CandidateInvite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_registrations")
+}
+
+model QuizSession {
+  id          String          @id @default(cuid())
+  inviteId    String          @unique
+  startTime   DateTime        @default(now())
+  submittedAt DateTime?
+  score       Float?
+  totalMarks  Float?
+  status      SessionStatus   @default(IN_PROGRESS)
+  invite      CandidateInvite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+
+  @@map("quiz_sessions")
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model Answer {
+  id               String      @id @default(cuid())
+  sessionId        String
+  questionId       String
+  selectedOptionId String?
+  textAnswer       String?
+  isCorrect        Boolean?
+  marksAwarded     Float?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  session          QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question         Question    @relation(fields: [questionId], references: [id])
+  selectedOption   MCQOption?  @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([sessionId, questionId])
+  @@map("answers")
+}
+
+model Zone {
+  id   String @id @default(cuid())
+  name String @unique
+
+  @@map("zones")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
