@@ -38,6 +38,7 @@ model Quiz {
   randomiseOptions   Boolean           @default(false)
   showAnswers        Boolean           @default(true)
   status             QuizStatus        @default(DRAFT)
+  publicToken        String?           @unique
   adminId            String
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt

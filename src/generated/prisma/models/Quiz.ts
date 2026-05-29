@@ -49,6 +49,7 @@ export type QuizMinAggregateOutputType = {
   randomiseOptions: boolean | null
   showAnswers: boolean | null
   status: $Enums.QuizStatus | null
+  publicToken: string | null
   adminId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -67,6 +68,7 @@ export type QuizMaxAggregateOutputType = {
   randomiseOptions: boolean | null
   showAnswers: boolean | null
   status: $Enums.QuizStatus | null
+  publicToken: string | null
   adminId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -85,6 +87,7 @@ export type QuizCountAggregateOutputType = {
   randomiseOptions: number
   showAnswers: number
   status: number
+  publicToken: number
   adminId: number
   createdAt: number
   updatedAt: number
@@ -115,6 +118,7 @@ export type QuizMinAggregateInputType = {
   randomiseOptions?: true
   showAnswers?: true
   status?: true
+  publicToken?: true
   adminId?: true
   createdAt?: true
   updatedAt?: true
@@ -133,6 +137,7 @@ export type QuizMaxAggregateInputType = {
   randomiseOptions?: true
   showAnswers?: true
   status?: true
+  publicToken?: true
   adminId?: true
   createdAt?: true
   updatedAt?: true
@@ -151,6 +156,7 @@ export type QuizCountAggregateInputType = {
   randomiseOptions?: true
   showAnswers?: true
   status?: true
+  publicToken?: true
   adminId?: true
   createdAt?: true
   updatedAt?: true
@@ -256,6 +262,7 @@ export type QuizGroupByOutputType = {
   randomiseOptions: boolean
   showAnswers: boolean
   status: $Enums.QuizStatus
+  publicToken: string | null
   adminId: string
   createdAt: Date
   updatedAt: Date
@@ -297,6 +304,7 @@ export type QuizWhereInput = {
   randomiseOptions?: Prisma.BoolFilter<"Quiz"> | boolean
   showAnswers?: Prisma.BoolFilter<"Quiz"> | boolean
   status?: Prisma.EnumQuizStatusFilter<"Quiz"> | $Enums.QuizStatus
+  publicToken?: Prisma.StringNullableFilter<"Quiz"> | string | null
   adminId?: Prisma.StringFilter<"Quiz"> | string
   createdAt?: Prisma.DateTimeFilter<"Quiz"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Quiz"> | Date | string
@@ -318,6 +326,7 @@ export type QuizOrderByWithRelationInput = {
   randomiseOptions?: Prisma.SortOrder
   showAnswers?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  publicToken?: Prisma.SortOrderInput | Prisma.SortOrder
   adminId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -328,6 +337,7 @@ export type QuizOrderByWithRelationInput = {
 
 export type QuizWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  publicToken?: string
   AND?: Prisma.QuizWhereInput | Prisma.QuizWhereInput[]
   OR?: Prisma.QuizWhereInput[]
   NOT?: Prisma.QuizWhereInput | Prisma.QuizWhereInput[]
@@ -348,7 +358,7 @@ export type QuizWhereUniqueInput = Prisma.AtLeast<{
   admin?: Prisma.XOR<Prisma.AdminScalarRelationFilter, Prisma.AdminWhereInput>
   questions?: Prisma.QuestionListRelationFilter
   invites?: Prisma.CandidateInviteListRelationFilter
-}, "id">
+}, "id" | "publicToken">
 
 export type QuizOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -363,6 +373,7 @@ export type QuizOrderByWithAggregationInput = {
   randomiseOptions?: Prisma.SortOrder
   showAnswers?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  publicToken?: Prisma.SortOrderInput | Prisma.SortOrder
   adminId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -389,6 +400,7 @@ export type QuizScalarWhereWithAggregatesInput = {
   randomiseOptions?: Prisma.BoolWithAggregatesFilter<"Quiz"> | boolean
   showAnswers?: Prisma.BoolWithAggregatesFilter<"Quiz"> | boolean
   status?: Prisma.EnumQuizStatusWithAggregatesFilter<"Quiz"> | $Enums.QuizStatus
+  publicToken?: Prisma.StringNullableWithAggregatesFilter<"Quiz"> | string | null
   adminId?: Prisma.StringWithAggregatesFilter<"Quiz"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Quiz"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Quiz"> | Date | string
@@ -407,6 +419,7 @@ export type QuizCreateInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutQuizzesInput
@@ -427,6 +440,7 @@ export type QuizUncheckedCreateInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   adminId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -447,6 +461,7 @@ export type QuizUpdateInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutQuizzesNestedInput
@@ -467,6 +482,7 @@ export type QuizUncheckedUpdateInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -487,6 +503,7 @@ export type QuizCreateManyInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   adminId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -505,6 +522,7 @@ export type QuizUpdateManyMutationInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -522,6 +540,7 @@ export type QuizUncheckedUpdateManyInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -550,6 +569,7 @@ export type QuizCountOrderByAggregateInput = {
   randomiseOptions?: Prisma.SortOrder
   showAnswers?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  publicToken?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -573,6 +593,7 @@ export type QuizMaxOrderByAggregateInput = {
   randomiseOptions?: Prisma.SortOrder
   showAnswers?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  publicToken?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -591,6 +612,7 @@ export type QuizMinOrderByAggregateInput = {
   randomiseOptions?: Prisma.SortOrder
   showAnswers?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  publicToken?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -728,6 +750,7 @@ export type QuizCreateWithoutAdminInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.QuestionCreateNestedManyWithoutQuizInput
@@ -747,6 +770,7 @@ export type QuizUncheckedCreateWithoutAdminInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutQuizInput
@@ -795,6 +819,7 @@ export type QuizScalarWhereInput = {
   randomiseOptions?: Prisma.BoolFilter<"Quiz"> | boolean
   showAnswers?: Prisma.BoolFilter<"Quiz"> | boolean
   status?: Prisma.EnumQuizStatusFilter<"Quiz"> | $Enums.QuizStatus
+  publicToken?: Prisma.StringNullableFilter<"Quiz"> | string | null
   adminId?: Prisma.StringFilter<"Quiz"> | string
   createdAt?: Prisma.DateTimeFilter<"Quiz"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Quiz"> | Date | string
@@ -813,6 +838,7 @@ export type QuizCreateWithoutQuestionsInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutQuizzesInput
@@ -832,6 +858,7 @@ export type QuizUncheckedCreateWithoutQuestionsInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   adminId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -867,6 +894,7 @@ export type QuizUpdateWithoutQuestionsInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutQuizzesNestedInput
@@ -886,6 +914,7 @@ export type QuizUncheckedUpdateWithoutQuestionsInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -905,6 +934,7 @@ export type QuizCreateWithoutInvitesInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutQuizzesInput
@@ -924,6 +954,7 @@ export type QuizUncheckedCreateWithoutInvitesInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   adminId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -959,6 +990,7 @@ export type QuizUpdateWithoutInvitesInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutQuizzesNestedInput
@@ -978,6 +1010,7 @@ export type QuizUncheckedUpdateWithoutInvitesInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -997,6 +1030,7 @@ export type QuizCreateManyAdminInput = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: $Enums.QuizStatus
+  publicToken?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1014,6 +1048,7 @@ export type QuizUpdateWithoutAdminInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.QuestionUpdateManyWithoutQuizNestedInput
@@ -1033,6 +1068,7 @@ export type QuizUncheckedUpdateWithoutAdminInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutQuizNestedInput
@@ -1052,6 +1088,7 @@ export type QuizUncheckedUpdateManyWithoutAdminInput = {
   randomiseOptions?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showAnswers?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumQuizStatusFieldUpdateOperationsInput | $Enums.QuizStatus
+  publicToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1109,6 +1146,7 @@ export type QuizSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: boolean
+  publicToken?: boolean
   adminId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1131,6 +1169,7 @@ export type QuizSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: boolean
+  publicToken?: boolean
   adminId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1150,6 +1189,7 @@ export type QuizSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: boolean
+  publicToken?: boolean
   adminId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1169,12 +1209,13 @@ export type QuizSelectScalar = {
   randomiseOptions?: boolean
   showAnswers?: boolean
   status?: boolean
+  publicToken?: boolean
   adminId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "instructions" | "durationMinutes" | "startDate" | "endDate" | "passingScore" | "randomiseQuestions" | "randomiseOptions" | "showAnswers" | "status" | "adminId" | "createdAt" | "updatedAt", ExtArgs["result"]["quiz"]>
+export type QuizOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "instructions" | "durationMinutes" | "startDate" | "endDate" | "passingScore" | "randomiseQuestions" | "randomiseOptions" | "showAnswers" | "status" | "publicToken" | "adminId" | "createdAt" | "updatedAt", ExtArgs["result"]["quiz"]>
 export type QuizInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
   questions?: boolean | Prisma.Quiz$questionsArgs<ExtArgs>
@@ -1208,6 +1249,7 @@ export type $QuizPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     randomiseOptions: boolean
     showAnswers: boolean
     status: $Enums.QuizStatus
+    publicToken: string | null
     adminId: string
     createdAt: Date
     updatedAt: Date
@@ -1649,6 +1691,7 @@ export interface QuizFieldRefs {
   readonly randomiseOptions: Prisma.FieldRef<"Quiz", 'Boolean'>
   readonly showAnswers: Prisma.FieldRef<"Quiz", 'Boolean'>
   readonly status: Prisma.FieldRef<"Quiz", 'QuizStatus'>
+  readonly publicToken: Prisma.FieldRef<"Quiz", 'String'>
   readonly adminId: Prisma.FieldRef<"Quiz", 'String'>
   readonly createdAt: Prisma.FieldRef<"Quiz", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Quiz", 'DateTime'>

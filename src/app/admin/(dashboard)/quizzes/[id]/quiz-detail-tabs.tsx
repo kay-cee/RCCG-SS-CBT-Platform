@@ -48,6 +48,7 @@ interface QuizDetailTabsProps {
     title: string;
     passingScore: number | null;
     showAnswers: boolean;
+    publicToken: string | null;
     questions: Question[];
     invites: Invite[];
   };
@@ -82,7 +83,10 @@ export function QuizDetailTabs({ quiz }: QuizDetailTabsProps) {
       )}
 
       {activeTab === "Candidates" && (
-        <InviteManager quizId={quiz.id} invites={quiz.invites} />
+        <div className="space-y-6">
+          <UniversalLinkPanel quizId={quiz.id} initialToken={quiz.publicToken} />
+          <InviteManager quizId={quiz.id} invites={quiz.invites} />
+        </div>
       )}
 
       {activeTab === "Results" && (
@@ -95,6 +99,127 @@ export function QuizDetailTabs({ quiz }: QuizDetailTabsProps) {
 
       {activeTab === "Question Bank" && (
         <QuestionBankTab quizId={quiz.id} />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Universal link panel — shareable self-registration link for a quiz
+// ---------------------------------------------------------------------------
+function UniversalLinkPanel({
+  quizId,
+  initialToken,
+}: {
+  quizId: string;
+  initialToken: string | null;
+}) {
+  const [publicToken, setPublicToken] = useState<string | null>(initialToken);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+
+  const appUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "";
+
+  const joinUrl = publicToken ? `${appUrl}/quiz/join/${publicToken}` : null;
+
+  async function handleGenerate() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/quiz/${quizId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "regeneratePublicToken" }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      setPublicToken(data.publicToken);
+    } catch {
+      setError("Failed to generate link. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!joinUrl) return;
+    try {
+      await navigator.clipboard.writeText(joinUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback: select text manually
+    }
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800">Universal Invite Link</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Share this link so candidates can register and take the quiz on their own — no email invite needed.
+          </p>
+        </div>
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className="flex-shrink-0 text-xs font-medium text-slate-600 border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "Generating…" : publicToken ? "Regenerate" : "Generate Link"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-600 mb-3">{error}</p>
+      )}
+
+      {joinUrl ? (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-mono truncate">
+            {joinUrl}
+          </div>
+          <button
+            onClick={handleCopy}
+            className="flex-shrink-0 flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors"
+            style={
+              copied
+                ? { borderColor: "#0d9488", color: "#0f766e", backgroundColor: "#f0fdfa" }
+                : { borderColor: "#cbd5e1", color: "#475569", backgroundColor: "white" }
+            }
+          >
+            {copied ? (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Copied!
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <p className="text-xs text-slate-400 italic">
+          No link generated yet. Click "Generate Link" to create one.
+        </p>
+      )}
+
+      {publicToken && (
+        <p className="text-xs text-amber-600 mt-2">
+          ⚠ Regenerating creates a new link — the old one will stop working immediately.
+        </p>
       )}
     </div>
   );

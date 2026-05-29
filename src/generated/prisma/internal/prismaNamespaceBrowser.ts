@@ -105,6 +105,7 @@ export const QuizScalarFieldEnum = {
   randomiseOptions: 'randomiseOptions',
   showAnswers: 'showAnswers',
   status: 'status',
+  publicToken: 'publicToken',
   adminId: 'adminId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

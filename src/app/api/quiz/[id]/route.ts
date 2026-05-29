@@ -66,6 +66,32 @@ export async function PUT(
   return Response.json(updated);
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getAdminSession();
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const quiz = await db.quiz.findFirst({ where: { id, adminId: session.adminId } });
+  if (!quiz) return Response.json({ error: "Not found" }, { status: 404 });
+
+  const { action } = await request.json();
+
+  if (action === "regeneratePublicToken") {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const publicToken: string = require("crypto").randomBytes(20).toString("hex");
+    const updated = await db.quiz.update({
+      where: { id },
+      data: { publicToken },
+    });
+    return Response.json({ publicToken: updated.publicToken });
+  }
+
+  return Response.json({ error: "Unknown action" }, { status: 400 });
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
