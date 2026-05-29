@@ -23,9 +23,12 @@ const QUESTION_RE = /^(\d+)\.\s*(.+)/;
 const OPTION_RE = /^\(([a-d])\)\s*(.+)/i;
 const ANSWER_RE = /^Answer:\s*(.+)/i;
 const FITG_RE = /_{3,}/;
-// Matches "P.45 - Fill..." whether it appears as a line suffix (with leading
-// whitespace) or as a standalone continuation line (zero leading whitespace).
-const PAGE_REF_RE = /\s*P\.\d+\s*-\s*Fill\b.*/i;
+// Strips "P.45 - Fill..." annotations (inline suffix or standalone line).
+// Also strips bare "P.45-" at line-end when "Fill" spills to the next line.
+const PAGE_REF_RE = /\s*P\.\d+\s*-?(\s*Fill\b.*)?\s*$/i;
+// Strips "Fill in the completion/blank..." and "in the completion..." lines
+// that PDFs sometimes emit as separate continuation lines after the P.XX ref.
+const FILL_NOTE_RE = /^(Fill in the |in the completion of)/i;
 
 export async function parsePdfQuestions(buffer: Buffer): Promise<ParsedQuestion[]> {
   const lines = await extractRichLines(buffer);
@@ -113,16 +116,16 @@ export function parseLines(lines: RichLine[]): ParsedQuestion[] {
       continue;
     }
 
-    let questionText = qMatch[2].trim();
+    let questionText = qMatch[2].replace(PAGE_REF_RE, "").trim();
     i++;
 
     // Accumulate wrapped question text (stops when we hit an option, next question, or Answer:)
     while (i < lines.length) {
       const next = lines[i].text;
       if (OPTION_RE.test(next) || QUESTION_RE.test(next) || ANSWER_RE.test(next)) break;
-      // Strip "P.XX - Fill in the completion..." annotation that appears in FITG questions
+      // Strip P.XX page-ref annotations; also skip "Fill in the completion..." noise lines
       const fragment = next.replace(PAGE_REF_RE, "").trim();
-      if (fragment) questionText += " " + fragment;
+      if (fragment && !FILL_NOTE_RE.test(fragment)) questionText += " " + fragment;
       i++;
     }
 
