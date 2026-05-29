@@ -14,6 +14,7 @@ const DEFAULT_ZONES = [
   "Temple of Praise Zone",
   "Shekinah Glory Zone",
   "Rose of Sharon Zone",
+  "New Mount Zion Zone",
 ];
 
 async function main() {
