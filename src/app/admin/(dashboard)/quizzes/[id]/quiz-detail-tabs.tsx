@@ -226,83 +226,208 @@ function UniversalLinkPanel({
 }
 
 // ---------------------------------------------------------------------------
-// Results tab — existing table + export button
+// Results tab — "All Results" table + "Leaderboard" sub-tabs
 // ---------------------------------------------------------------------------
+
+/** Convert start/end timestamps into a human-readable "Xm Ys" duration. */
+function formatCompletionTime(
+  startTime: Date | string,
+  submittedAt: Date | string
+): string {
+  const ms =
+    new Date(submittedAt).getTime() - new Date(startTime).getTime();
+  if (ms < 0) return "—";
+  const totalSeconds = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+}
+
 function ResultsTab({
   quiz,
 }: {
   quiz: QuizDetailTabsProps["quiz"];
 }) {
+  const [subTab, setSubTab] = useState<"results" | "leaderboard">("results");
+
   const completed = quiz.invites.filter((i) => i.session?.status === "COMPLETED");
+
+  // Leaderboard: rank by score desc, then by fastest completion time asc.
+  // Only include rows where submittedAt is known (needed for completion time).
+  const leaderboard = [...completed]
+    .filter((i) => i.session?.submittedAt != null)
+    .sort((a, b) => {
+      const pctA = scorePercentage(a.session!.score ?? 0, a.session!.totalMarks ?? 1);
+      const pctB = scorePercentage(b.session!.score ?? 0, b.session!.totalMarks ?? 1);
+      if (pctB !== pctA) return pctB - pctA; // higher score first
+      // Tie-break: fastest (smallest elapsed ms) wins
+      const msA =
+        new Date(a.session!.submittedAt!).getTime() -
+        new Date(a.session!.startTime).getTime();
+      const msB =
+        new Date(b.session!.submittedAt!).getTime() -
+        new Date(b.session!.startTime).getTime();
+      return msA - msB;
+    });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          {completed.length} submission{completed.length !== 1 ? "s" : ""}
-        </p>
-        {completed.length > 0 && (
-          <a
-            href={`/api/quiz/${quiz.id}/export`}
-            download
-            className="inline-flex items-center gap-1.5 border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+      {/* Sub-tab bar */}
+      <div className="flex gap-0 border-b border-slate-200">
+        {(["results", "leaderboard"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setSubTab(t)}
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              subTab === t
+                ? "border-teal-600 text-teal-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            )}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export CSV
-          </a>
-        )}
+            {t === "results" ? "All Results" : "Leaderboard"}
+          </button>
+        ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        {completed.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">No submissions yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {["Name", "Zone", "Score", "Pass/Fail", "Submitted"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 font-medium text-slate-600 whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {completed.map((invite) => {
-                  const s = invite.session!;
-                  const pct = scorePercentage(s.score!, s.totalMarks!);
-                  const passed = quiz.passingScore != null ? pct >= quiz.passingScore : null;
-                  return (
-                    <tr key={invite.id}>
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {invite.registration?.fullName || invite.name}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{invite.zone}</td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {s.score}/{s.totalMarks} ({pct}%)
-                      </td>
-                      <td className="px-4 py-3">
-                        {passed !== null ? (
-                          <Badge variant={passed ? "success" : "error"}>
-                            {passed ? "PASS" : "FAIL"}
-                          </Badge>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">
-                        {s.submittedAt ? new Date(s.submittedAt).toLocaleString() : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* ── All Results ── */}
+      {subTab === "results" && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              {completed.length} submission{completed.length !== 1 ? "s" : ""}
+            </p>
+            {completed.length > 0 && (
+              <a
+                href={`/api/quiz/${quiz.id}/export`}
+                download
+                className="inline-flex items-center gap-1.5 border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export CSV
+              </a>
+            )}
           </div>
-        )}
-      </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            {completed.length === 0 ? (
+              <div className="p-12 text-center text-slate-400">No submissions yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      {["Name", "Zone", "Score", "Pass/Fail", "Submitted"].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 font-medium text-slate-600 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {completed.map((invite) => {
+                      const s = invite.session!;
+                      const pct = scorePercentage(s.score!, s.totalMarks!);
+                      const passed = quiz.passingScore != null ? pct >= quiz.passingScore : null;
+                      return (
+                        <tr key={invite.id}>
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {invite.registration?.fullName || invite.name}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{invite.zone}</td>
+                          <td className="px-4 py-3 text-slate-600">
+                            {s.score}/{s.totalMarks} ({pct}%)
+                          </td>
+                          <td className="px-4 py-3">
+                            {passed !== null ? (
+                              <Badge variant={passed ? "success" : "error"}>
+                                {passed ? "PASS" : "FAIL"}
+                              </Badge>
+                            ) : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 text-xs">
+                            {s.submittedAt ? new Date(s.submittedAt).toLocaleString() : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Leaderboard ── */}
+      {subTab === "leaderboard" && (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500">
+            Ranked by highest score, then by fastest completion time.
+          </p>
+
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            {leaderboard.length === 0 ? (
+              <div className="p-12 text-center text-slate-400">No submissions yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      {["Rank", "Name", "Zone", "Score", "Time"].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 font-medium text-slate-600 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {leaderboard.map((invite, idx) => {
+                      const s = invite.session!;
+                      const pct = scorePercentage(s.score ?? 0, s.totalMarks ?? 1);
+                      const rank = idx + 1;
+                      const medal =
+                        rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+                      return (
+                        <tr
+                          key={invite.id}
+                          className={cn(
+                            rank === 1 && "bg-amber-50",
+                            rank === 2 && "bg-slate-50",
+                            rank === 3 && "bg-orange-50/50"
+                          )}
+                        >
+                          <td className="px-4 py-3 font-semibold text-slate-700">
+                            {medal ? (
+                              <span className="text-lg">{medal}</span>
+                            ) : (
+                              <span className="text-slate-400">#{rank}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {invite.registration?.fullName || invite.name}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{invite.zone}</td>
+                          <td className="px-4 py-3 font-semibold text-slate-800">
+                            {s.score}/{s.totalMarks}{" "}
+                            <span className="font-normal text-slate-500">({pct}%)</span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 font-mono text-xs">
+                            {formatCompletionTime(s.startTime, s.submittedAt!)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
