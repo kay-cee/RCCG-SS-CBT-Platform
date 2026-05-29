@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { verifyCandidateToken } from "@/lib/auth";
 import { sendScoreEmail } from "@/lib/email";
-import { isPassed } from "@/lib/utils";
+import { isPassed, scoreTextAnswer } from "@/lib/utils";
 
 export async function POST(
   _req: NextRequest,
@@ -53,8 +53,15 @@ export async function POST(
       const option = q.options.find((o) => o.id === answer.selectedOptionId);
       isCorrect = option?.isCorrect ?? false;
       marksAwarded = isCorrect ? q.marks : 0;
+    } else if (q.type === "FITG" && answer.textAnswer) {
+      // FITG: compare candidate's text answer against the stored correct answer.
+      // The correct answer is stored as the single MCQOption with isCorrect:true.
+      const correctOption = q.options.find((o) => o.isCorrect);
+      if (correctOption) {
+        isCorrect = scoreTextAnswer(answer.textAnswer, correctOption.text);
+        marksAwarded = isCorrect ? q.marks : 0;
+      }
     }
-    // FITG scoring is Phase 2 — skip for now
 
     score += marksAwarded;
 

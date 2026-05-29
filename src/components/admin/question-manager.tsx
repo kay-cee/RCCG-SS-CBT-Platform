@@ -31,8 +31,11 @@ export function QuestionManager({ quizId, initialQuestions }: QuestionManagerPro
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [pdfParsing, setPdfParsing] = useState(false);
+  const [bankParsing, setBankParsing] = useState(false);
   const [pdfError, setPdfError] = useState("");
+  const [archiving, setArchiving] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bankFileRef = useRef<HTMLInputElement>(null);
 
   function addQuestion() {
     setQuestions((prev) => [
@@ -153,11 +156,79 @@ export function QuestionManager({ quizId, initialQuestions }: QuestionManagerPro
     }
   }
 
+  // Upload PDF directly to the Question Bank (quizId = null)
+  async function handleBankPdfUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBankParsing(true);
+    setPdfError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      // Parse the PDF (reuse quiz parse endpoint — just for extraction)
+      const parseRes = await fetch(`/api/quiz/${quizId}/parse-pdf`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!parseRes.ok) {
+        setPdfError("Failed to parse PDF for bank.");
+        return;
+      }
+      const parsed: Question[] = await parseRes.json();
+
+      // Save to bank (quizId = null)
+      const bankRes = await fetch("/api/question-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed),
+      });
+      if (!bankRes.ok) {
+        setPdfError("Failed to save to question bank.");
+        return;
+      }
+      setSaveMsg(`${parsed.length} questions saved to the Question Bank.`);
+    } catch {
+      setPdfError("Network error uploading to bank.");
+    } finally {
+      setBankParsing(false);
+      if (bankFileRef.current) bankFileRef.current.value = "";
+    }
+  }
+
+  // Archive a question from this quiz into the Question Bank
+  async function archiveToBank(qIdx: number) {
+    const q = questions[qIdx];
+    if (!q.id) {
+      // Unsaved question — just remove it from the list (can't archive to DB)
+      removeQuestion(qIdx);
+      return;
+    }
+    setArchiving(qIdx);
+    try {
+      const res = await fetch(`/api/question-bank/${q.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "archive" }),
+      });
+      if (res.ok) {
+        // Remove from local list — it's now in the bank
+        setQuestions((prev) => prev.filter((_, i) => i !== qIdx).map((q, i) => ({ ...q, order: i })));
+        setSaveMsg("Question archived to Question Bank.");
+      } else {
+        setSaveMsg("Failed to archive question.");
+      }
+    } finally {
+      setArchiving(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Actions */}
       <div className="flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={addQuestion} variant="outline" size="sm">
             + Add Question
           </Button>
@@ -176,6 +247,23 @@ export function QuestionManager({ quizId, initialQuestions }: QuestionManagerPro
               accept="application/pdf"
               className="hidden"
               onChange={handlePdfUpload}
+            />
+          </label>
+          <label className="cursor-pointer" title="Parse a PDF and save all questions to the Question Bank">
+            <span
+              className={cn(
+                "inline-flex items-center text-sm font-medium border border-teal-300 text-teal-700 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition-colors",
+                bankParsing && "opacity-50 pointer-events-none"
+              )}
+            >
+              {bankParsing ? "Saving to Bank…" : "Upload to Bank"}
+            </span>
+            <input
+              ref={bankFileRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleBankPdfUpload}
             />
           </label>
         </div>
@@ -222,12 +310,24 @@ export function QuestionManager({ quizId, initialQuestions }: QuestionManagerPro
             />
             <span className="text-xs text-slate-400">marks</span>
 
-            <button
-              onClick={() => removeQuestion(qIdx)}
-              className="ml-auto text-slate-400 hover:text-red-500 text-xs"
-            >
-              Remove
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              {q.id && (
+                <button
+                  onClick={() => archiveToBank(qIdx)}
+                  disabled={archiving === qIdx}
+                  className="text-teal-500 hover:text-teal-700 text-xs disabled:opacity-50"
+                  title="Move this question to the Question Bank"
+                >
+                  {archiving === qIdx ? "Archiving…" : "→ Bank"}
+                </button>
+              )}
+              <button
+                onClick={() => removeQuestion(qIdx)}
+                className="text-slate-400 hover:text-red-500 text-xs"
+              >
+                Remove
+              </button>
+            </div>
           </div>
 
           <textarea

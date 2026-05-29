@@ -56,13 +56,13 @@ enum QuizStatus {
 
 model Question {
   id         String       @id @default(cuid())
-  quizId     String
+  quizId     String?      // null = question is in the shared Question Bank
   type       QuestionType
   text       String
   marks      Float        @default(1)
   order      Int
   createdAt  DateTime     @default(now())
-  quiz       Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz       Quiz?        @relation(fields: [quizId], references: [id], onDelete: SetNull)
   options    MCQOption[]
   answers    Answer[]
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isPassed, scorePercentage, formatScore, formatDuration } from "../utils";
+import { isPassed, scorePercentage, formatScore, formatDuration, scoreTextAnswer } from "../utils";
 
 // ---------------------------------------------------------------------------
 // isPassed
@@ -80,6 +80,58 @@ describe("formatScore", () => {
 
   it("handles zero total (returns 0%)", () => {
     expect(formatScore(0, 0)).toBe("0/0 (0%)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scoreTextAnswer — FITG scoring
+// ---------------------------------------------------------------------------
+describe("scoreTextAnswer", () => {
+  it("exact match (case-insensitive) passes", () => {
+    expect(scoreTextAnswer("righteousness", "righteousness")).toBe(true);
+    expect(scoreTextAnswer("RIGHTEOUSNESS", "righteousness")).toBe(true);
+    expect(scoreTextAnswer("  righteousness  ", "righteousness")).toBe(true);
+  });
+
+  it("exact match after punctuation normalisation passes", () => {
+    // Correct answer has trailing period; candidate doesn't
+    expect(scoreTextAnswer(
+      "but righteousness and peace and joy in the Holy Spirit",
+      "but righteousness and peace and joy in the Holy Spirit."
+    )).toBe(true);
+  });
+
+  it("candidate that contains the correct answer passes (substring)", () => {
+    expect(scoreTextAnswer(
+      "I believe the answer is righteousness and peace and joy in the Holy Spirit",
+      "righteousness and peace and joy in the Holy Spirit"
+    )).toBe(true);
+  });
+
+  it("keyword match passes when all significant words are present", () => {
+    // Candidate omits "but" (stop word) — should still pass
+    expect(scoreTextAnswer(
+      "righteousness peace joy Holy Spirit",
+      "but righteousness and peace and joy in the Holy Spirit."
+    )).toBe(true);
+  });
+
+  it("completely wrong answer fails", () => {
+    expect(scoreTextAnswer("heaven and earth", "righteousness and peace")).toBe(false);
+  });
+
+  it("empty candidate answer fails", () => {
+    expect(scoreTextAnswer("", "righteousness")).toBe(false);
+    expect(scoreTextAnswer("   ", "righteousness")).toBe(false);
+  });
+
+  it("empty correct answer fails", () => {
+    expect(scoreTextAnswer("righteousness", "")).toBe(false);
+  });
+
+  it("partial keyword match (missing key word) fails", () => {
+    // "peace" is missing — not a match
+    expect(scoreTextAnswer("righteousness and joy", "righteousness and peace and joy")).toBe(false);
   });
 });
 
