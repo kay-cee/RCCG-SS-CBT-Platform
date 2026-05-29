@@ -91,7 +91,7 @@ export function ZoneBarChart({ zones, overall, passingScore }: ZoneBarChartProps
               tickFormatter={(v) => `${v}%`}
             />
             <Tooltip
-              formatter={(value: number) => [`${value}%`, "Avg Score"]}
+              formatter={(value) => [`${value ?? 0}%`, "Avg Score"]}
               contentStyle={{ fontSize: 12, borderRadius: 8 }}
             />
             {passingScore != null && (
@@ -142,10 +142,10 @@ export function ZoneBarChart({ zones, overall, passingScore }: ZoneBarChartProps
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
-                formatter={(value: number, _name, props) => [
-                  `${value}% (${props.payload.passCount}/${props.payload.count})`,
-                  "Pass Rate",
-                ]}
+                formatter={(value, _name, props) => {
+                  const d = props?.payload as ZoneStat | undefined;
+                  return [`${value ?? 0}% (${d?.passCount ?? 0}/${d?.count ?? 0})`, "Pass Rate"];
+                }}
                 contentStyle={{ fontSize: 12, borderRadius: 8 }}
               />
               <Bar dataKey="passRate" name="Pass Rate" radius={[4, 4, 0, 0]}>
