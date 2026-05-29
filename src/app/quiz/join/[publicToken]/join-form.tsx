@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { validateJoinFields } from "@/lib/utils";
 
 interface JoinFormProps {
   publicToken: string;
@@ -18,18 +19,12 @@ export function JoinForm({ publicToken, zones }: JoinFormProps) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [zone, setZone] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ fullName?: string; email?: string; phone?: string; zone?: string }>({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   function validate() {
-    const e: Record<string, string> = {};
-    if (!fullName || fullName.trim().length < 2) e.fullName = "Please enter your full name";
-    else if (!/^[a-zA-Z\s'-]+$/.test(fullName.trim())) e.fullName = "Name may only contain letters and spaces";
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = "Please enter a valid email address";
-    if (!phone) e.phone = "Phone number is required";
-    if (!zone) e.zone = "Please select your zone";
-    return e;
+    return validateJoinFields({ fullName, email, phone, zone });
   }
 
   async function handleSubmit(e: React.FormEvent) {

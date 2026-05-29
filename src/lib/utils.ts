@@ -76,6 +76,48 @@ export function scoreTextAnswer(candidate: string, correct: string): boolean {
   return keyWords.every((w) => candWords.has(w));
 }
 
+// ---------------------------------------------------------------------------
+// Self-registration field validation (shared by join-form.tsx and API route)
+// ---------------------------------------------------------------------------
+
+export interface JoinFieldErrors {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  zone?: string;
+}
+
+export function validateJoinFields(fields: {
+  fullName: string;
+  email: string;
+  phone: string;
+  zone: string;
+}): JoinFieldErrors {
+  const e: JoinFieldErrors = {};
+  const name = fields.fullName.trim();
+  const email = fields.email.trim();
+
+  if (!name || name.length < 2) {
+    e.fullName = "Please enter your full name";
+  } else if (!/^[a-zA-Z\s'-]+$/.test(name)) {
+    e.fullName = "Name may only contain letters, spaces, hyphens and apostrophes";
+  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    e.email = "Please enter a valid email address";
+  }
+
+  if (!fields.phone.trim()) {
+    e.phone = "Phone number is required";
+  }
+
+  if (!fields.zone) {
+    e.zone = "Please select your zone";
+  }
+
+  return e;
+}
+
 export function isPassed(
   score: number,
   total: number,

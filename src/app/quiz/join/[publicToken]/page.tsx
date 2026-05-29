@@ -28,8 +28,8 @@ export default async function JoinPage({
     db.zone.findMany({ orderBy: { name: "asc" } }),
   ]);
 
-  // Invalid link or DRAFT quiz
-  if (!quiz || quiz.status === "DRAFT") {
+  // Truly invalid — publicToken not found in DB
+  if (!quiz) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
@@ -42,6 +42,26 @@ export default async function JoinPage({
           <h1 className="text-xl font-bold text-slate-900">Invalid Link</h1>
           <p className="text-slate-500 mt-2 text-sm">
             This invite link is not valid or has been removed. Please contact your quiz administrator.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // Quiz exists but not yet opened to candidates
+  if (quiz.status === "DRAFT") {
+    return (
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 mb-5">
+            <svg className="w-7 h-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Not Yet Available</h1>
+          <p className="text-slate-500 mt-2 text-sm">
+            <strong>{quiz.title}</strong> has not been opened yet. Please check back later or contact your quiz administrator.
           </p>
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isPassed, scorePercentage, formatScore, formatDuration, scoreTextAnswer } from "../utils";
+import { isPassed, scorePercentage, formatScore, formatDuration, scoreTextAnswer, validateJoinFields } from "../utils";
 
 // ---------------------------------------------------------------------------
 // isPassed
@@ -132,6 +132,78 @@ describe("scoreTextAnswer", () => {
   it("partial keyword match (missing key word) fails", () => {
     // "peace" is missing — not a match
     expect(scoreTextAnswer("righteousness and joy", "righteousness and peace and joy")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateJoinFields — self-registration form validation
+// ---------------------------------------------------------------------------
+describe("validateJoinFields", () => {
+  const valid = { fullName: "John Adeyemi", email: "john@example.com", phone: "08012345678", zone: "Grace Arena Zone" };
+
+  it("returns no errors for valid input", () => {
+    expect(validateJoinFields(valid)).toEqual({});
+  });
+
+  // --- fullName ---
+  it("errors when fullName is empty", () => {
+    expect(validateJoinFields({ ...valid, fullName: "" })).toHaveProperty("fullName");
+  });
+
+  it("errors when fullName is a single character", () => {
+    expect(validateJoinFields({ ...valid, fullName: "A" })).toHaveProperty("fullName");
+  });
+
+  it("errors when fullName contains digits or special chars", () => {
+    expect(validateJoinFields({ ...valid, fullName: "John123" })).toHaveProperty("fullName");
+    expect(validateJoinFields({ ...valid, fullName: "John@Doe" })).toHaveProperty("fullName");
+  });
+
+  it("accepts fullName with hyphen and apostrophe", () => {
+    expect(validateJoinFields({ ...valid, fullName: "Mary-Jane O'Brien" })).not.toHaveProperty("fullName");
+  });
+
+  it("trims whitespace before validating fullName", () => {
+    expect(validateJoinFields({ ...valid, fullName: "  Jo  " })).not.toHaveProperty("fullName");
+    expect(validateJoinFields({ ...valid, fullName: "  A  " })).toHaveProperty("fullName");
+  });
+
+  // --- email ---
+  it("errors when email is empty", () => {
+    expect(validateJoinFields({ ...valid, email: "" })).toHaveProperty("email");
+  });
+
+  it("errors for emails missing @", () => {
+    expect(validateJoinFields({ ...valid, email: "notanemail.com" })).toHaveProperty("email");
+  });
+
+  it("errors for emails missing domain", () => {
+    expect(validateJoinFields({ ...valid, email: "user@" })).toHaveProperty("email");
+  });
+
+  it("accepts valid email formats", () => {
+    expect(validateJoinFields({ ...valid, email: "user@domain.org" })).not.toHaveProperty("email");
+    expect(validateJoinFields({ ...valid, email: "user+tag@sub.domain.com" })).not.toHaveProperty("email");
+  });
+
+  // --- phone ---
+  it("errors when phone is empty", () => {
+    expect(validateJoinFields({ ...valid, phone: "" })).toHaveProperty("phone");
+    expect(validateJoinFields({ ...valid, phone: "   " })).toHaveProperty("phone");
+  });
+
+  it("accepts any non-empty phone string", () => {
+    expect(validateJoinFields({ ...valid, phone: "+234 801 234 5678" })).not.toHaveProperty("phone");
+  });
+
+  // --- zone ---
+  it("errors when zone is empty", () => {
+    expect(validateJoinFields({ ...valid, zone: "" })).toHaveProperty("zone");
+  });
+
+  it("returns errors for multiple invalid fields simultaneously", () => {
+    const errors = validateJoinFields({ fullName: "", email: "bad", phone: "", zone: "" });
+    expect(Object.keys(errors).length).toBe(4);
   });
 });
 

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { signCandidateToken } from "@/lib/auth";
+import { validateJoinFields } from "@/lib/utils";
 
 // Public — no admin auth required.
 // Returns just enough quiz info for the self-registration landing page.
@@ -24,7 +25,7 @@ export async function GET(
   });
 
   if (!quiz) return Response.json({ error: "not_found" }, { status: 404 });
-  if (quiz.status === "DRAFT") return Response.json({ error: "not_available" }, { status: 403 });
+  if (quiz.status === "DRAFT") return Response.json({ error: "quiz_not_available" }, { status: 403 });
 
   return Response.json(quiz);
 }
@@ -65,14 +66,9 @@ export async function POST(
     zone: string;
   };
 
-  if (!fullName || !email || !phone || !zone) {
-    return Response.json({ error: "All fields are required" }, { status: 400 });
-  }
-  if (fullName.trim().length < 2 || !/^[a-zA-Z\s'-]+$/.test(fullName.trim())) {
-    return Response.json({ error: "Invalid full name" }, { status: 400 });
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    return Response.json({ error: "Invalid email address" }, { status: 400 });
+  const fieldErrors = validateJoinFields({ fullName: fullName ?? "", email: email ?? "", phone: phone ?? "", zone: zone ?? "" });
+  if (Object.keys(fieldErrors).length > 0) {
+    return Response.json({ error: "Validation failed", fields: fieldErrors }, { status: 400 });
   }
 
   const normalEmail = email.trim().toLowerCase();
