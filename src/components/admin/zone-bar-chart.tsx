@@ -7,7 +7,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  ReferenceLine,
   ResponsiveContainer,
   Cell,
 } from "recharts";
@@ -95,11 +95,11 @@ export function ZoneBarChart({ zones, overall, passingScore }: ZoneBarChartProps
               contentStyle={{ fontSize: 12, borderRadius: 8 }}
             />
             {passingScore != null && (
-              <Legend
-                payload={[
-                  { value: `Passing score: ${passingScore}%`, type: "line", color: AMBER },
-                ]}
-                wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+              <ReferenceLine
+                y={passingScore}
+                stroke={AMBER}
+                strokeDasharray="4 2"
+                label={{ value: `Pass: ${passingScore}%`, position: "insideTopRight", fontSize: 10, fill: AMBER }}
               />
             )}
             <Bar dataKey="avgPercentage" name="Avg Score" radius={[4, 4, 0, 0]}>
