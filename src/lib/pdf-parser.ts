@@ -30,12 +30,23 @@ export async function parsePdfQuestions(buffer: Buffer): Promise<ParsedQuestion[
 }
 
 async function extractRichLines(buffer: Buffer): Promise<RichLine[]> {
-  // Dynamic import so Next.js doesn't try to bundle this for the browser.
-  // In Node.js, pdfjs-dist's static initialiser already sets:
-  //   #isWorkerDisabled = true
-  //   GlobalWorkerOptions.workerSrc ||= "./pdf.worker.mjs"
-  // so we must NOT override workerSrc — doing so (even to "") breaks the fake-worker loader.
+  // Dynamic import keeps this server-only (never bundled for the browser).
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
+  // pdfjs-dist sets workerSrc = "./pdf.worker.mjs" (relative) in its static
+  // initialiser. That relative path resolves correctly when running plain Node.js
+  // but breaks inside Next.js / Turbopack where server chunks live in
+  // .next/.../chunks/ — the worker file isn't there.
+  // Fix: point workerSrc at the real file using an absolute file:// URL so the
+  // dynamic import inside pdfjs always finds it regardless of CWD or bundler.
+  const { resolve } = await import("path");
+  const { pathToFileURL } = await import("url");
+  const workerPath = resolve(
+    process.cwd(),
+    "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (pdfjs as any).GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
 
   const data = new Uint8Array(buffer);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
