@@ -7,16 +7,13 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const db = new PrismaClient({ adapter });
 
 const DEFAULT_ZONES = [
-  "Lagos Zone 1",
-  "Lagos Zone 2",
-  "Lagos Zone 3",
-  "Abuja Zone",
-  "Port Harcourt Zone",
-  "Ibadan Zone",
-  "Kano Zone",
-  "Enugu Zone",
-  "Ogun Zone",
-  "Delta Zone",
+  "Grace Arena Zone",
+  "Glorious Assembly Zone",
+  "TEAP Zone",
+  "Holy Ghost Zone",
+  "Temple of Praise Zone",
+  "Shekinah Glory Zone",
+  "Rose of Sharon Zone",
 ];
 
 async function main() {
