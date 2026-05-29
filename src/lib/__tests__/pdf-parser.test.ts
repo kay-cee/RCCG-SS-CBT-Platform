@@ -316,6 +316,23 @@ describe("Edge cases and noise filtering", () => {
     expect(result).toHaveLength(1);
   });
 
+  it("parses a question number with no space after the period (e.g. '35.According...')", () => {
+    // Regression: QUESTION_RE used \s+ which required at least one space.
+    // Some PDFs omit the space, causing the question to be silently skipped.
+    const lines = [
+      line("35.According to Luke 18:3-5, Game Changers are ___", "FontA"),
+      line("(a)Dogged and never take no for an answer", "FontB"),
+      line("(b)Audacious", "FontA"),
+      line("(c)Master Strategists", "FontA"),
+      line("(d)Highly creative", "FontA"),
+    ];
+    const result = parseLines(lines);
+    expect(result).toHaveLength(1);
+    expect(result[0].text).toContain("Game Changers");
+    // FontB is minority → option (a) is correct
+    expect(result[0].options.find((o) => o.isCorrect)?.text).toContain("Dogged");
+  });
+
   it("strips P.XX - Fill annotation from question text", () => {
     // In real PDFs the page-reference annotation is always a continuation line,
     // not part of the question-number line itself.

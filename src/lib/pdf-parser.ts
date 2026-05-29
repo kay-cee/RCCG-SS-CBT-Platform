@@ -18,7 +18,8 @@ interface RichOption {
   isBold: boolean;
 }
 
-const QUESTION_RE = /^(\d+)\.\s+(.+)/;
+// \s* (not \s+) so "35.According to..." (no space) still parses correctly.
+const QUESTION_RE = /^(\d+)\.\s*(.+)/;
 const OPTION_RE = /^\(([a-d])\)\s*(.+)/i;
 const ANSWER_RE = /^Answer:\s*(.+)/i;
 const FITG_RE = /_{3,}/;
