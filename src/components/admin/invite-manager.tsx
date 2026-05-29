@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
 interface Invite {
@@ -37,12 +38,20 @@ export function InviteManager({ quizId, invites: initial }: InviteManagerProps) 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [zone, setZone] = useState("");
+  const [zones, setZones] = useState<{ id: string; name: string }[]>([]);
   const [csvText, setCsvText] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [sendNow, setSendNow] = useState(true);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/zones")
+      .then((r) => r.json())
+      .then((data: { id: string; name: string }[]) => setZones(data))
+      .catch(() => {/* zones will remain empty; user can still type */});
+  }, []);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -241,7 +250,15 @@ export function InviteManager({ quizId, invites: initial }: InviteManagerProps) 
                 <Input id="name" label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
                 <Input id="email" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
-              <Input id="zone" label="Zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder="e.g. Lagos Zone 1" required />
+              <Select
+                id="zone"
+                label="Zone"
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+                options={zones.map((z) => ({ value: z.name, label: z.name }))}
+                placeholder="Select a zone"
+                required
+              />
               <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                 <input type="checkbox" checked={sendNow} onChange={(e) => setSendNow(e.target.checked)} className="accent-teal-600" />
                 Send invitation email immediately
@@ -258,7 +275,7 @@ export function InviteManager({ quizId, invites: initial }: InviteManagerProps) 
             </p>
             <textarea
               className="w-full border border-slate-200 rounded-lg p-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-600 resize-none min-h-[120px]"
-              placeholder={"Name, Email, Zone\nJohn Doe, john@example.com, Lagos Zone 1"}
+              placeholder={`Name, Email, Zone\nJohn Doe, john@example.com, Grace Arena Zone`}
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
             />

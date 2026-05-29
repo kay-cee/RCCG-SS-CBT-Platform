@@ -601,6 +601,11 @@ export type QuizSumOrderByAggregateInput = {
   passingScore?: Prisma.SortOrder
 }
 
+export type QuizNullableScalarRelationFilter = {
+  is?: Prisma.QuizWhereInput | null
+  isNot?: Prisma.QuizWhereInput | null
+}
+
 export type QuizScalarRelationFilter = {
   is?: Prisma.QuizWhereInput
   isNot?: Prisma.QuizWhereInput
@@ -686,10 +691,12 @@ export type QuizCreateNestedOneWithoutQuestionsInput = {
   connect?: Prisma.QuizWhereUniqueInput
 }
 
-export type QuizUpdateOneRequiredWithoutQuestionsNestedInput = {
+export type QuizUpdateOneWithoutQuestionsNestedInput = {
   create?: Prisma.XOR<Prisma.QuizCreateWithoutQuestionsInput, Prisma.QuizUncheckedCreateWithoutQuestionsInput>
   connectOrCreate?: Prisma.QuizCreateOrConnectWithoutQuestionsInput
   upsert?: Prisma.QuizUpsertWithoutQuestionsInput
+  disconnect?: Prisma.QuizWhereInput | boolean
+  delete?: Prisma.QuizWhereInput | boolean
   connect?: Prisma.QuizWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.QuizUpdateToOneWithWhereWithoutQuestionsInput, Prisma.QuizUpdateWithoutQuestionsInput>, Prisma.QuizUncheckedUpdateWithoutQuestionsInput>
 }

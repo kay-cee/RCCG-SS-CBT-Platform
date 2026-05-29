@@ -35,20 +35,12 @@ async function extractRichLines(buffer: Buffer): Promise<RichLine[]> {
   // Dynamic import keeps this server-only (never bundled for the browser).
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  // pdfjs-dist sets workerSrc = "./pdf.worker.mjs" (relative) in its static
-  // initialiser. That relative path resolves correctly when running plain Node.js
-  // but breaks inside Next.js / Turbopack where server chunks live in
-  // .next/.../chunks/ — the worker file isn't there.
-  // Fix: point workerSrc at the real file using an absolute file:// URL so the
-  // dynamic import inside pdfjs always finds it regardless of CWD or bundler.
-  const { resolve } = await import("path");
-  const { pathToFileURL } = await import("url");
-  const workerPath = resolve(
-    process.cwd(),
-    "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
-  );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (pdfjs as any).GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
+  // pdfjs-dist v5 in Node.js: do NOT set GlobalWorkerOptions.workerSrc.
+  // When workerSrc is unset in a Node.js environment, pdfjs automatically
+  // uses its built-in "fake worker" (main-thread processing).  Setting it
+  // to a file:// URL would instead spawn a worker_threads.Worker, which
+  // is unavailable or restricted in Vercel serverless and causes the parse
+  // to silently fail with "Failed to parse PDF".
 
   const data = new Uint8Array(buffer);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
