@@ -103,8 +103,7 @@ export async function verifyPassword(
 }
 
 export function generateResetToken(): string {
-  return (
-    Math.random().toString(36).substring(2) +
-    Math.random().toString(36).substring(2)
-  );
+  // Use crypto.randomBytes for cryptographic security — Math.random() is
+  // predictable and must never be used for security-sensitive tokens.
+  return require("crypto").randomBytes(32).toString("hex");
 }

@@ -22,7 +22,9 @@ const QUESTION_RE = /^(\d+)\.\s+(.+)/;
 const OPTION_RE = /^\(([a-d])\)\s*(.+)/i;
 const ANSWER_RE = /^Answer:\s*(.+)/i;
 const FITG_RE = /_{3,}/;
-const PAGE_REF_RE = /\s+P\.\d+\s*-\s*Fill\b.*/i;
+// Matches "P.45 - Fill..." whether it appears as a line suffix (with leading
+// whitespace) or as a standalone continuation line (zero leading whitespace).
+const PAGE_REF_RE = /\s*P\.\d+\s*-\s*Fill\b.*/i;
 
 export async function parsePdfQuestions(buffer: Buffer): Promise<ParsedQuestion[]> {
   const lines = await extractRichLines(buffer);
@@ -105,7 +107,9 @@ async function extractRichLines(buffer: Buffer): Promise<RichLine[]> {
   return result;
 }
 
-function parseLines(lines: RichLine[]): ParsedQuestion[] {
+// Exported for unit testing — allows tests to bypass PDF extraction and
+// feed mock RichLine arrays directly into the parsing logic.
+export function parseLines(lines: RichLine[]): ParsedQuestion[] {
   const questions: ParsedQuestion[] = [];
   let i = 0;
 

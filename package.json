@@ -12,7 +12,12 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "setup": "npm run db:push && npm run db:seed"
+    "setup": "npm run db:push && npm run db:seed",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:security": "vitest run --config vitest.security.config.ts",
+    "test:load": "echo \"Install k6 from https://k6.io then run: k6 run tests/load/concurrent-exam.js\""
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -57,10 +62,13 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.7"
   }
 }
