@@ -336,7 +336,7 @@ function QuestionBankTab({ quizId }: { quizId: string }) {
                 </div>
                 <Button
                   size="sm"
-                  variant={copied.has(q.id) ? "outline" : "default"}
+                  variant={copied.has(q.id) ? "outline" : "primary"}
                   onClick={() => copyToQuiz(q.id)}
                   disabled={copying === q.id}
                   className="flex-shrink-0"
