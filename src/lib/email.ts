@@ -1,18 +1,11 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-function createTransport() {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === "true",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM = process.env.EMAIL_FROM || "CBT Platform <noreply@example.com>";
+// Resend requires a verified domain for custom from addresses.
+// onboarding@resend.dev works on all plans without domain verification.
+const FROM =
+  process.env.EMAIL_FROM || "RCCG CBT Platform <onboarding@resend.dev>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export async function sendInviteEmail({
@@ -31,9 +24,8 @@ export async function sendInviteEmail({
   startDate?: Date | null;
 }) {
   const quizUrl = `${APP_URL}/quiz/${token}`;
-  const transport = createTransport();
 
-  await transport.sendMail({
+  await resend.emails.send({
     from: FROM,
     to,
     subject: `You're invited: ${quizTitle}`,
@@ -76,9 +68,8 @@ export async function sendScoreEmail({
   passingScore?: number | null;
 }) {
   const percentage = Math.round((score / totalMarks) * 100);
-  const transport = createTransport();
 
-  await transport.sendMail({
+  await resend.emails.send({
     from: FROM,
     to,
     subject: `Your results: ${quizTitle}`,
@@ -110,9 +101,7 @@ export async function sendPasswordResetEmail({
   to: string;
   resetUrl: string;
 }) {
-  const transport = createTransport();
-
-  await transport.sendMail({
+  await resend.emails.send({
     from: FROM,
     to,
     subject: "Reset your password — CBT Platform",
@@ -127,7 +116,7 @@ export async function sendPasswordResetEmail({
             Reset Password
           </a>
         </div>
-        <p style="color:#666;font-size:13px;">If you didn't request this, you can ignore this email.</p>
+        <p style="color:#666;font-size:13px;">If you didn't request this, you can ignore this email safely.</p>
       </div>
     `,
   });
