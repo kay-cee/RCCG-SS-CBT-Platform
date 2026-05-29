@@ -78,19 +78,23 @@ export async function PUT(
     options?: Array<{ text: string; isCorrect: boolean; order: number }>;
   }> = await request.json();
 
-  await db.question.deleteMany({ where: { quizId } });
+  try {
+    // Delete existing (cascades to MCQOption and Answer rows)
+    await db.question.deleteMany({ where: { quizId } });
 
-  const created = await db.$transaction(
-    body.map((q, idx) =>
-      db.question.create({
-        data: {
-          quizId,
-          type: q.type as "MCQ" | "FITG",
-          text: q.text,
-          marks: q.marks ?? 1,
-          order: idx,
-          options:
-            q.type === "MCQ" && q.options?.length
+    // Re-insert concurrently — avoids the 5-second $transaction timeout that
+    // fires when a large PDF produces many questions with nested option creates.
+    // Options are saved for both MCQ (4 choices) and FITG (1 correct-answer entry).
+    const created = await Promise.all(
+      body.map((q, idx) =>
+        db.question.create({
+          data: {
+            quizId,
+            type: q.type as "MCQ" | "FITG",
+            text: q.text,
+            marks: q.marks ?? 1,
+            order: idx,
+            options: q.options?.length
               ? {
                   create: q.options.map((opt, oidx) => ({
                     text: opt.text,
@@ -99,11 +103,15 @@ export async function PUT(
                   })),
                 }
               : undefined,
-        },
-        include: { options: { orderBy: { order: "asc" } } },
-      })
-    )
-  );
+          },
+          include: { options: { orderBy: { order: "asc" } } },
+        })
+      )
+    );
 
-  return Response.json(created);
+    return Response.json(created);
+  } catch (err) {
+    console.error("[questions PUT]", err);
+    return Response.json({ error: "Failed to save questions", detail: String(err) }, { status: 500 });
+  }
 }
